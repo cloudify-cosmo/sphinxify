@@ -44,9 +44,13 @@ def run(command, *args):
 
 
 git = partial(run, 'git')
+conf = partial(git, 'config', '--global')
 
 
 def main():
+    conf('user.email', 'gh-pages-test@getcloudify.org')
+    conf('user.name', 'Cloudify github pages test account')
+
     # Check the gh-pages branch exists & create if not
     try:
         git('rev-parse', '--verify', 'origin/gh-pages')
