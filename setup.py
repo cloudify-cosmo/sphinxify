@@ -37,6 +37,7 @@ setup(
     entry_points={
         'console_scripts': [
             'sphinxify-build = sphinxify.build:main',
+            'sphinxify-gh-pages = sphinxify.gh_pages:main',
             ],
         'sphinx_themes': [
             'path = sphinxify:get_theme',
