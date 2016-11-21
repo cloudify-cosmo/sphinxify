@@ -53,6 +53,7 @@ def main():
     except CalledProcessError:
         git('checkout', '--orphan', 'gh-pages')
         git('add', 'README*')
+        git('commit', '-m', 'initial docs commit')
         git('push', 'origin', 'gh-pages')
 
     # Build all the docs
