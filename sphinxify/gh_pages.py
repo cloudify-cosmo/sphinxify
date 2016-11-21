@@ -56,6 +56,7 @@ def main():
         git('rev-parse', '--verify', 'origin/gh-pages')
     except CalledProcessError:
         git('checkout', '--orphan', 'gh-pages')
+        git('rm', '-rf', '.')
         git('add', 'README*')
         git('commit', '-m', 'initial docs commit')
         git('push', 'origin', 'gh-pages')
