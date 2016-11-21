@@ -1,1 +1,1 @@
-recursive-include sphinxify/themes *
+recursive-include sphinxify/themes *.*
