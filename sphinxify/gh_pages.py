@@ -64,9 +64,8 @@ def main():
         git('push', 'origin', 'gh-pages')
 
     # Build all the docs
-    run('sphinx-versioning', '-r', 'master',
+    run('sphinx-versioning',
         'push', 'docs', 'gh-pages', '.')
-
 
 if __name__ == '__main__':
     main()
