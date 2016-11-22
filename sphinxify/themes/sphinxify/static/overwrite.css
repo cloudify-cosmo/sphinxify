@@ -1003,19 +1003,6 @@ transform: rotate(90deg);
   border-left:none;
 }
 
-.navbar .nav > li > a {
-  float: none;
-  font-size:13px;
-  padding: 10px 0 10px;
-  /*margin-left:15px;*/
-  margin-right:0;
-  color: #999999;
-  text-decoration: none;
-  text-shadow: none;
-  border-right:none;
-  border-left:none;
-}
-
 .navbar .nav > li > a:hover,
 .navbar .nav > li > a:focus {
   color: #dddddd;

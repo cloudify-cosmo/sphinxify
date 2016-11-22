@@ -6,17 +6,11 @@
 
 {% block extrahead %}
     <link rel="stylesheet" type="text/css" href="_static/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="_static/style.css">
     <link rel="stylesheet" type="text/css" href="_static/overwrite.css">
     <link rel="stylesheet" type="text/css" href="_static/cloudify-sphinx.css">
 {% endblock %}
 
 {% block header %}
-    <header>
-        <nav>
-            <a href="//getcloudify.org" class="navbar-brand">
-                <img src="_static/logo.png" alt="Cloudify Logo">
-                <span class="gs-font">Cloudify</span>
-            </a>
-        </nav>
-    </header>
+    {% include 'header.html' %}
 {% endblock %}
