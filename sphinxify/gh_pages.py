@@ -57,6 +57,9 @@ def main():
     except CalledProcessError:
         git('checkout', '--orphan', 'gh-pages')
         git('rm', '-rf', '.')
+        with open('README.rst', 'w') as f:
+            f.write('sphinxify generated docs branch')
+        git('add', 'README.rst')
         git('commit', '-m', 'initial docs commit')
         git('push', 'origin', 'gh-pages')
 
