@@ -24,6 +24,13 @@ from functools import partial
 from subprocess import check_call, CalledProcessError
 
 
+DISABLE_CIRCLE = """
+test:
+    override:
+        - echo "no tests on gh-pages branch"
+"""
+
+
 @contextmanager
 def pushd(newdir):
     """
@@ -58,9 +65,10 @@ def main():
     except CalledProcessError:
         git('checkout', '--orphan', 'gh-pages')
         git('rm', '-rf', '.')
-        with open('README.rst', 'w') as f:
-            f.write('sphinxify generated docs branch')
-        git('add', 'README.rst')
+        with open('circle.yml', 'w') as f:
+            f.write(DISABLE_CIRCLE)
+        run('touch', '.nojekyll')
+        git('add', 'circle.yml', '.nojekyll')
         git('commit', '-m', 'initial docs commit')
         git('push', 'origin', 'gh-pages')
 
