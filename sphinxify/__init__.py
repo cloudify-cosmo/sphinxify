@@ -28,6 +28,12 @@ from sphinx.util.docstrings import prepare_docstring
 from sphinx.util.nodes import make_refnode
 
 
+ROOT_TYPES = [
+    'cloudify.nodes.Root',
+    'cloudify.relationships.depends_on',
+    ]
+
+
 types = {}
 
 
@@ -95,8 +101,8 @@ class CfyDirective(ObjectDescription):
     def __init__(self, *args, **kwargs):
         super(CfyDirective, self).__init__(*args, **kwargs)
 
-        self.data = types[self.section].pop(
-                self.arguments[0].strip())
+        self.ent_name = self.arguments[0].strip()
+        self.data = types[self.section].pop(self.ent_name)
 
     def handle_signature(self, sig, signode):
         signode.append(addnodes.desc_name(sig, sig))
@@ -113,17 +119,18 @@ class CfyDirective(ObjectDescription):
 
     def after_contentnode(self, node):
         # derived_from:
-        deriv = self.data['derived_from']
-        xref_node = addnodes.pending_xref(
-                '', refdomain='cfy', reftype=self.kind,
-                reftarget=deriv,
-                modname=None, classname=None,
-                )
-        xref_node += nodes.Text(deriv, deriv)
-        node.append(nodes.paragraph(
-            'Derived from: ', 'Derived from: ',
-            xref_node,
-            ))
+        if self.ent_name not in ROOT_TYPES:
+            deriv = self.data['derived_from']
+            xref_node = addnodes.pending_xref(
+                    '', refdomain='cfy', reftype=self.kind,
+                    reftarget=deriv,
+                    modname=None, classname=None,
+                    )
+            xref_node += nodes.Text(deriv, deriv)
+            node.append(nodes.paragraph(
+                'Derived from: ', 'Derived from: ',
+                xref_node,
+                ))
 
         if 'properties' in self.data:
             node.append(nodes.rubric('', 'Properties:'))
