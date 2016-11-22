@@ -65,7 +65,9 @@ def main():
 
     # Build all the docs
     run('sphinx-versioning',
-        'push', 'docs', 'gh-pages', '.')
+        'push', 'docs', 'gh-pages', '.',
+        '-r', 'sphinx-docs',
+        )
 
 if __name__ == '__main__':
     main()
