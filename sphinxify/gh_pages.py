@@ -23,6 +23,8 @@ from contextlib import contextmanager
 from functools import partial
 from subprocess import check_call, CalledProcessError
 
+import click
+
 
 DISABLE_CIRCLE = """
 test:
@@ -54,7 +56,9 @@ git = partial(run, 'git')
 conf = partial(git, 'config', '--global')
 
 
-def main():
+@click.command()
+@click.argument('main_branch')
+def main(main_branch):
     conf('user.email', 'gh-pages-test@getcloudify.org')
     conf('user.name', 'Cloudify github pages test account')
 
@@ -75,7 +79,7 @@ def main():
     # Build all the docs
     run('sphinx-versioning',
         'push', 'docs', 'gh-pages', '.',
-        '-r', 'sphinx-docs',
+        '-r', main_branch,
         )
 
 if __name__ == '__main__':
