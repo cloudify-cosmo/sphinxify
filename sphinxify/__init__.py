@@ -208,7 +208,7 @@ class CfyDomain(Domain):
         super(CfyDomain, self).__init__(*args, **kwargs)
 
         for file in self.env.config.cfy_blueprint_paths:
-            with open(file) as f:
+            with open(os.path.join(self.env.srcdir, file)) as f:
                 blueprint = yaml.load(f)
                 merge_dicts(types, blueprint)
 
