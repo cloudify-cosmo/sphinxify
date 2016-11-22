@@ -53,7 +53,7 @@ def main():
 
     # Check the gh-pages branch exists & create if not
     try:
-        git('fetch', 'origin')
+        git('remote', 'prune', 'origin')
         git('rev-parse', '--verify', 'origin/gh-pages')
     except CalledProcessError:
         git('checkout', '--orphan', 'gh-pages')
