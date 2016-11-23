@@ -31,6 +31,7 @@ setup(
     install_requires=[
         'click',
         'sphinx',
+        'sphinx_rtd_theme',
         'sphinxcontrib-versioning',
     ],
 
