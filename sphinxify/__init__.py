@@ -14,6 +14,7 @@
 #    * limitations under the License.
 
 import os
+from urllib2 import urlopen
 from abc import ABCMeta, abstractproperty
 
 import yaml
@@ -27,6 +28,10 @@ from sphinx.roles import XRefRole
 from sphinx.util.docstrings import prepare_docstring
 from sphinx.util.nodes import make_refnode
 
+
+PLUGIN_VERSIONS_YAML = 'https://github.com/cloudify-cosmo/cloudify-versions/raw/master/versions.yaml'
+
+PLUGIN_DOC_URL_TEMPLATE = 'https://funkyhat.github.io/{}/'
 
 ROOT_TYPES = [
     'cloudify.nodes.Root',
@@ -248,6 +253,9 @@ class CfyDomain(Domain):
                 blueprint = yaml.load(f)
                 merge_dicts(types, blueprint)
 
+        f = urlopen(PLUGIN_VERSIONS_YAML)
+        self.cloudify_versions = yaml.load(f)
+
     name = 'cfy'
     description = 'Cloudify DSL'
 
@@ -298,6 +306,21 @@ class CfyDomain(Domain):
                         )
 
 
+def html_page_context(app, pagename, templatename, context, doctree):
+    """
+    Hook to inject extra details into the template
+    """
+    plugins = context['plugin_links'] = [
+            ]
+    for plugin in app.env.domains['cfy'].cloudify_versions['components']:
+        if plugin.endswith('-plugin'):
+            thing = '-'.join(plugin.split('-')[1:-1])
+            plugins.append({
+                'text': thing,
+                'target': PLUGIN_DOC_URL_TEMPLATE.format(plugin),
+                })
+
+
 def setup(app):
     app.add_config_value(
             'cfy_blueprint_paths',
@@ -307,6 +330,7 @@ def setup(app):
 
     app.add_domain(CfyDomain)
 
+    app.connect('html-page-context', html_page_context)
     app.connect('build-finished', build_finished)
 
     return {'version': '0.1'}

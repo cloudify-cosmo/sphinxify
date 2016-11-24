@@ -4854,3 +4854,11 @@ table {
         padding: 8px 13px;
     }
 }
+
+
+#plugin-links h3 {
+    font-family: 'Open Sans', sans-serif;
+    background: #f0a;
+    margin: 18px 0 0;
+    padding: 0.3em 20px 0.2em;
+}

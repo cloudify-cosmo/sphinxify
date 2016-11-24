@@ -171,13 +171,20 @@
        <li><a href="http://getcloudify.org/blog/" target="_blank">BLOG</a></li>
        </ul>
      </div>
-    
-    <!-- changeable widget -->
-    <div id="sideBanner">
-    <br/>
-    <a href="http://docs.getcloudify.org/">
-    </a>
+
+    {% if plugin_links %}
+    <div id="plugin-links">
+        <h3>Official Plugins</h3>
+        <ul>
+        {% for link in plugin_links %}
+            <li class="toctree-l1">
+                <a class="reference internal" href="{{ link.target }}">
+                {{ link.text }}</a>
+            </li>
+        {% endfor %}
+        </ul>
     </div>
+    {% endif %}
 
 
       </div>

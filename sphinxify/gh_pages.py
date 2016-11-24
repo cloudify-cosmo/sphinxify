@@ -69,10 +69,15 @@ def main(main_branch):
     except CalledProcessError:
         git('checkout', '--orphan', 'gh-pages')
         git('rm', '-rf', '.')
+
+        # Stop circleci from complaining about the branch
         with open('circle.yml', 'w') as f:
             f.write(DISABLE_CIRCLE)
+        # Stop gh-pages from trying to treat _static etc. as special Jekyll
+        # things.
         run('touch', '.nojekyll')
         git('add', 'circle.yml', '.nojekyll')
+
         git('commit', '-m', 'initial docs commit')
         git('push', 'origin', 'gh-pages')
 
