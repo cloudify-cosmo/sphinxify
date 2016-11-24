@@ -22,7 +22,7 @@ from docutils import nodes
 from docutils.statemachine import ViewList
 from sphinx import addnodes
 from sphinx.directives import ObjectDescription
-from sphinx.domains import Domain, ObjType
+from sphinx.domains import Domain, ObjType, Index
 from sphinx.roles import XRefRole
 from sphinx.util.docstrings import prepare_docstring
 from sphinx.util.nodes import make_refnode
@@ -209,6 +209,35 @@ class Relationship(CfyDirective):
     kind = 'relationship'
 
 
+class CfyIndex(Index):
+
+    name = 'cfyindex'
+    localname = 'Cloudify Types Index'
+    shortname = 'cfyindex'
+
+    def generate(self, docnames=None):
+        content = {}
+
+        for kind in self.domain.initial_data:
+            items = sorted(self.domain.data[kind].items())
+
+            for type, (docname, _) in items:
+                if docnames and docname not in docnames:
+                    continue
+
+                content.setdefault(type.split('.')[-1][0].lower(), []).append([
+                    type,  # name
+                    0,  # subtype (0 == normal entry)
+                    docname,  # docname
+                    type,  # anchor
+                    '',  # extra info
+                    '',  # qualifier
+                    '',  # description
+                    ])
+
+        return sorted(content.items()), False
+
+
 class CfyDomain(Domain):
 
     def __init__(self, *args, **kwargs):
@@ -236,6 +265,10 @@ class CfyDomain(Domain):
             'node': CfyXRefRole(),
             'rel': CfyXRefRole(),
             }
+
+    indices = [
+            CfyIndex,
+            ]
 
     initial_data = {
             'node': {},
