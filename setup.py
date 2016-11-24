@@ -33,6 +33,7 @@ setup(
         'sphinx',
         'sphinx_rtd_theme',
         'sphinxcontrib-versioning',
+        'pyyaml',
     ],
 
     include_package_data=True,
