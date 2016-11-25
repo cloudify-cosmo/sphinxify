@@ -217,6 +217,7 @@
 
   </div>
 
+  {% if versions is defined %}
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
       <span class="rst-current-version" data-toggle="rst-current-version">
           <span class="fa fa-book"> Other Versions</span>
@@ -242,6 +243,7 @@
           {%- endif %}
       </div>
   </div>
+  {% endif %}
   
 </body>
 </html>
