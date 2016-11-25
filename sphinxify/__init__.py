@@ -14,8 +14,9 @@
 #    * limitations under the License.
 
 import os
-from urllib2 import urlopen
 from abc import ABCMeta, abstractproperty
+from contextlib import contextmanager
+from urllib2 import urlopen
 
 import yaml
 
@@ -245,17 +246,6 @@ class CfyIndex(Index):
 
 class CfyDomain(Domain):
 
-    def __init__(self, *args, **kwargs):
-        super(CfyDomain, self).__init__(*args, **kwargs)
-
-        for file in self.env.config.cfy_blueprint_paths:
-            with open(os.path.join(self.env.srcdir, file)) as f:
-                blueprint = yaml.load(f)
-                merge_dicts(types, blueprint)
-
-        f = urlopen(PLUGIN_VERSIONS_YAML)
-        self.cloudify_versions = yaml.load(f)
-
     name = 'cfy'
     description = 'Cloudify DSL'
 
@@ -282,6 +272,30 @@ class CfyDomain(Domain):
             'node': {},
             'relationship': {},
             }
+
+    def __init__(self, *args, **kwargs):
+        super(CfyDomain, self).__init__(*args, **kwargs)
+
+        for file in self.env.config.cfy_blueprint_paths:
+            with self.load_file(file) as f:
+                blueprint = yaml.load(f)
+                merge_dicts(types, blueprint)
+
+        with self.load_file(PLUGIN_VERSIONS_YAML) as f:
+            self.cloudify_versions = yaml.load(f)
+
+    @contextmanager
+    def load_file(self, location):
+        """
+        load a file from a local path or URL
+        """
+        try:
+            f = urlopen(location)
+        except ValueError:
+            # raised by urlopen for non-url-looking inputs
+            f = open(os.path.join(self.env.srcdir, location))
+        yield f
+        f.close()
 
     def resolve_xref(
             self, env, fromdocname, builder, type, target, node, contnode):
