@@ -32,7 +32,7 @@ from sphinx.util.nodes import make_refnode
 
 PLUGIN_VERSIONS_YAML = 'https://github.com/cloudify-cosmo/cloudify-versions/raw/master/versions.yaml'
 
-PLUGIN_DOC_URL_TEMPLATE = 'https://funkyhat.github.io/{}/'
+PLUGIN_DOC_URL_TEMPLATE = '../{}/'
 
 ROOT_TYPES = [
     'cloudify.nodes.Root',
@@ -320,6 +320,13 @@ class CfyDomain(Domain):
                         )
 
 
+def get_plugin_name_from_repo(repo_name):
+    """
+    Strip off preceding org & -plugin
+    """
+    return '-'.join(repo_name.split('-')[1:-1])
+
+
 def html_page_context(app, pagename, templatename, context, doctree):
     """
     Hook to inject extra details into the template
@@ -328,10 +335,10 @@ def html_page_context(app, pagename, templatename, context, doctree):
             ]
     for plugin in app.env.domains['cfy'].cloudify_versions['components']:
         if plugin.endswith('-plugin'):
-            thing = '-'.join(plugin.split('-')[1:-1])
+            thing = get_plugin_name_from_repo(plugin)
             plugins.append({
                 'text': thing,
-                'target': PLUGIN_DOC_URL_TEMPLATE.format(plugin),
+                'target': PLUGIN_DOC_URL_TEMPLATE.format(thing),
                 })
 
 

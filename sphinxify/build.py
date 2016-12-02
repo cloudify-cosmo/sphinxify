@@ -13,6 +13,7 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
+import errno
 import logging
 import os
 import subprocess
@@ -20,6 +21,8 @@ from contextlib import contextmanager
 
 import click
 import yaml
+
+from . import get_plugin_name_from_repo
 
 
 @contextmanager
@@ -36,29 +39,27 @@ def pushd(newdir):
 
 
 def build_component(name, component, out_dir):
-    subprocess.check_call(
-            ['git', 'clone',
-             component['repo'],
-             name,
-             ],
-            )
+    dirname = get_plugin_name_from_repo(name)
 
-    with pushd(os.path.join(name)):
-        if component['branch']:
-            subprocess.check_call(
-                    ['git', 'checkout',
-                     component['branch'],
-                     ])
+    if not os.path.isdir(dirname):
+        subprocess.check_call([
+            'git', 'clone',
+            component['repo'],
+            dirname,
+            ])
 
-        os.chdir('docs')
+    # There's no need to fetch or pull anything because SCV always builds
+    # branches & tags straight from the remote
 
+    with pushd(os.path.join(dirname)):
         print('build dir ', os.getcwd())
-        subprocess.check_call(
-                ['sphinx-build',
-                 '-b', 'html',
-                 '.',
-                 os.path.join(out_dir, name),  # build target
-                 ])
+        subprocess.check_call([
+                'sphinx-versioning',
+                'build', 'docs', os.path.join(out_dir, dirname),
+                '--root-ref', component['branch'],
+                '--banner-main-ref', component['branch'],
+                '--show-banner',
+                ])
 
 
 @click.command()
@@ -84,11 +85,24 @@ def build_component(name, component, out_dir):
 def main(config, build, out):
     config = yaml.load(config)
 
+    # populate missing repo fields
+    for name, component in config['components'].items():
+        component['name'] = name
+        component.setdefault(
+            'repo',
+            'https://github.com/cloudify-cosmo/{}.git'.format(name))
+
     out = os.path.abspath(out)
     build = os.path.abspath(build)
 
     for dir in out, build:
-        os.mkdir(dir)
+        try:
+            os.makedirs(dir)
+        except OSError as e:
+            if e.errno == errno.EEXIST:
+                pass
+            else:
+                raise
 
     failures = []
 
