@@ -1,0 +1,6 @@
+components:
+  cloudify-gcp-plugin:
+    branch: sphinx-docs
+  cloudify-openstack-plugin:
+    repo: https://github.com/funkyhat/cloudify-openstack-plugin.git
+    branch: sphinx-docs
