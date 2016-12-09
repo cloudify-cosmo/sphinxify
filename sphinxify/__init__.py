@@ -14,9 +14,11 @@
 #    * limitations under the License.
 
 import os
+import logging
 from abc import ABCMeta, abstractproperty
 from contextlib import contextmanager
-from urllib2 import urlopen
+from urllib2 import urlopen, URLError
+from StringIO import StringIO
 
 import yaml
 
@@ -30,7 +32,10 @@ from sphinx.util.docstrings import prepare_docstring
 from sphinx.util.nodes import make_refnode
 
 
-PLUGIN_VERSIONS_YAML = 'https://github.com/cloudify-cosmo/cloudify-versions/raw/master/versions.yaml'
+PLUGIN_VERSIONS_YAML = (
+        'https://github.com/cloudify-cosmo/cloudify-versions/raw'
+        '/master/versions.yaml'
+        )
 
 PLUGIN_DOC_URL_TEMPLATE = '../{}/'
 
@@ -61,14 +66,19 @@ class node(nodes.Element):
 def check_all_types_documented(app):
     for section in [
             'node_types',
+            'data_types',
             'relationships',
             ]:
         for item in types.get(section, []):
             # TODO: make this a hard failure
-            app.warn('{item} from {section} has not been documented!'.format(
-                item=item,
-                section=section,
-                ))
+            if item not in app.env.domains['cfy'].data[section]:
+                app.warn(
+                    '{item} from {section} '
+                    'has not been documented!'.format(
+                        item=item,
+                        section=section,
+                    )
+                )
 
 
 def build_finished(app, exception):
@@ -120,12 +130,87 @@ class CfyDirective(ObjectDescription):
             signode['ids'].append(sig)
             signode['first'] = (not self.names)
             self.state.document.note_explicit_target(signode)
-            objects = self.env.domaindata['cfy'][self.kind]
-            objects[sig] = (self.env.docname, self.objtype)
+            objects = self.env.domaindata['cfy'][self.section]
+            objects[sig] = self.data
+            objects[sig]['sphinx_link'] = (self.env.docname, self.objtype)
+
+    def generate_properties(self, node, properties):
+        """
+        Add the properties to the node
+        """
+        for name, property in properties.items():
+            default = property.get('default')
+            type = property.get('type')
+
+            info = '**type:** :cfy:datatype:`{}`'.format(type) if type else ''
+
+            if default is not None:
+                if default != '':
+                    info += ' **default:** ``{}``'.format(property['default'])
+            elif property.get('required', True):
+                info += ' **required**'
+
+            try:
+                description = property['description']
+            except KeyError:
+                if type in {
+                        'string',
+                        'boolean',
+                        'list',
+                        'integer',
+                        None,
+                        }:
+                    # only custom defined types are allowed to not have a
+                    # description
+                    print('{type} property {name} has no description'.format(
+                        type=self.arguments[0],
+                        name=name,
+                        ))
+                    print(get_doc(self.arguments[0].strip(), name))
+
+                    raise
+                else:
+                    description = ''
+
+            lines = ViewList(prepare_docstring(
+                info + '\n\n' + description + '\n\n'))
+
+            term = nodes.term('', name)
+            definition = nodes.definition()
+            self.state.nested_parse(
+                    lines,
+                    self.content_offset + 4,
+                    definition,
+                    )
+
+            if type not in [
+                    'string',
+                    'boolean',
+                    'list',
+                    'integer',
+                    ]:
+                # Try tp get the nested properties of the type
+                data_type = types.get('data_types', {}).get(type)
+                if data_type:
+                    sub_props = nodes.definition_list()
+                    definition.append(sub_props)
+                    self.generate_properties(
+                            sub_props,
+                            data_type['properties']
+                            )
+
+            node.append(nodes.definition_list_item(
+                '',
+                term,
+                definition,
+                ))
 
     def after_contentnode(self, node):
         # derived_from:
-        if self.ent_name not in ROOT_TYPES:
+        if (
+                self.ent_name not in ROOT_TYPES and
+                self.section != 'data_types'
+                ):
             deriv = self.data['derived_from']
             xref_node = addnodes.pending_xref(
                     '', refdomain='cfy', reftype=self.kind,
@@ -144,42 +229,7 @@ class CfyDirective(ObjectDescription):
             props = nodes.definition_list()
             node.append(props)
 
-            for name, property in self.data['properties'].items():
-                try:
-                    desc = property['description']
-                except KeyError:
-                    print('{type} property {name} has no description'.format(
-                        type=self.arguments[0],
-                        name=name,
-                        ))
-                    print(get_doc(self.arguments[0].strip(), name))
-
-                    raise
-
-                info = ''
-
-                default = property.get('default', None)
-                if default is not None:
-                    if default != '':
-                        info += ' **default:** {}'.format(property['default'])
-                elif property.get('required', True):
-                    info += ' **required**'
-
-                term = nodes.term('', name)
-                lines = ViewList(prepare_docstring(
-                    info + '\n\n' + desc + '\n\n'))
-                definition = nodes.definition()
-                self.state.nested_parse(
-                        lines,
-                        self.content_offset + 4,
-                        definition,
-                        )
-
-                props.append(nodes.definition_list_item(
-                    '',
-                    term,
-                    definition,
-                    ))
+            self.generate_properties(props, self.data['properties'])
 
     def run(self):
         indexnode, node = super(CfyDirective, self).run()
@@ -210,6 +260,11 @@ class Node(CfyDirective):
     kind = 'node'
 
 
+class DataType(CfyDirective):
+    section = 'data_types'
+    kind = 'datatype'
+
+
 class Relationship(CfyDirective):
     section = 'relationships'
     kind = 'relationship'
@@ -227,7 +282,8 @@ class CfyIndex(Index):
         for kind in self.domain.initial_data:
             items = sorted(self.domain.data[kind].items())
 
-            for type, (docname, _) in items:
+            for type, data in items:
+                docname = data['sphinx_link'][0]
                 if docnames and docname not in docnames:
                     continue
 
@@ -244,6 +300,13 @@ class CfyIndex(Index):
         return sorted(content.items()), False
 
 
+TYPE_MAP = {
+        'node': 'node_types',
+        'datatype': 'data_types',
+        'rel': 'relationships',
+        }
+
+
 class CfyDomain(Domain):
 
     name = 'cfy'
@@ -251,16 +314,19 @@ class CfyDomain(Domain):
 
     object_types = {
             'node': ObjType('node', 'node'),
+            'datatype': ObjType('datatypes', 'rel'),
             'rel': ObjType('relationship', 'rel'),
             }
 
     directives = {
             'node': Node,
+            'datatype': DataType,
             'rel': Relationship,
             }
 
     roles = {
             'node': CfyXRefRole(),
+            'datatype': CfyXRefRole(),
             'rel': CfyXRefRole(),
             }
 
@@ -268,10 +334,7 @@ class CfyDomain(Domain):
             CfyIndex,
             ]
 
-    initial_data = {
-            'node': {},
-            'relationship': {},
-            }
+    initial_data = {v: {} for v in TYPE_MAP.values()}
 
     def __init__(self, *args, **kwargs):
         super(CfyDomain, self).__init__(*args, **kwargs)
@@ -294,13 +357,16 @@ class CfyDomain(Domain):
         except ValueError:
             # raised by urlopen for non-url-looking inputs
             f = open(os.path.join(self.env.srcdir, location))
+        except URLError as e:
+            logging.warn('Unable to load {}:'.format(location), e)
+            f = StringIO('components: []')
         yield f
         f.close()
 
     def resolve_xref(
             self, env, fromdocname, builder, type, target, node, contnode):
         try:
-            obj = self.data[type][target]
+            obj = self.data[TYPE_MAP[type]][target]['sphinx_link']
         except KeyError:
             pass
         else:
@@ -308,13 +374,17 @@ class CfyDomain(Domain):
                     builder, fromdocname, obj[0], target, contnode, target)
 
     def get_objects(self):
-        for type in ['node', 'relationship']:
+        for type in (
+                'node_types',
+                'data_types',
+                'relationships',
+                ):
             for name, obj in self.data[type].items():
                 yield (
                         name,
                         name,
                         type,
-                        obj[0],
+                        obj['sphinx_link'][0],
                         name,
                         1,
                         )

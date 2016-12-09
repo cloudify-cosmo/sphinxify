@@ -4,3 +4,5 @@ components:
   cloudify-openstack-plugin:
     repo: https://github.com/funkyhat/cloudify-openstack-plugin.git
     branch: sphinx-docs
+  cloudify-vsphere-plugin:
+    branch: sphinx-docs
