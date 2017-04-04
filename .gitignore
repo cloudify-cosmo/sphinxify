@@ -92,3 +92,7 @@ ENV/
 out
 
 *.sw[po]
+
+
+# Sphinx build dir
+_build/
