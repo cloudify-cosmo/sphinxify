@@ -82,6 +82,9 @@ def check_all_types_documented(app):
 
 
 def build_finished(app, exception):
+    if exception is not None:
+        # Don't mask an already raised exception
+        raise exception
     check_all_types_documented(app)
 
 
