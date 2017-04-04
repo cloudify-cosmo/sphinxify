@@ -139,14 +139,12 @@ class CfyDirective(ObjectDescription):
                         }:
                     # only custom defined types are allowed to not have a
                     # description
-                    print('{type} property {name} has no description'.format(
-                        type=self.arguments[0],
-                        name=name,
+                    self.state.document.settings.env.app.warn(
+                        '{type} property {name} has no description'.format(
+                            type=self.arguments[0],
+                            name=name,
                         ))
-
-                    raise
-                else:
-                    description = ''
+                description = ''
 
             lines = ViewList(prepare_docstring(
                 info + '\n\n' + description + '\n\n'))
