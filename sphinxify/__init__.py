@@ -70,7 +70,6 @@ def check_all_types_documented(app):
             'relationships',
             ]:
         for item in types.get(section, []):
-            # TODO: make this a hard failure
             if item not in app.env.domains['cfy'].data[section]:
                 app.warn(
                     '{item} from {section} '
