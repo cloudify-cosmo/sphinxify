@@ -88,32 +88,6 @@ def build_finished(app, exception):
     check_all_types_documented(app)
 
 
-def get_doc(type, prop):
-    """
-    temporary helper to find doc snippets from the existing docs site repo
-
-    TODO: delete this function.
-    """
-    with open(os.path.join(
-            os.path.dirname(__file__),
-            '../../docs.getcloudify.org/content/plugins/openstack.md'),
-            'U') as f:
-        type_line = '## {}'.format(type)
-        print(type_line)
-        for line in f:
-            if line.startswith(type_line):
-                break
-        else:
-            raise ValueError("didn't find the type")
-        start = '* `{}'.format(prop)
-        print(start)
-        for line in f:
-            if line.strip().startswith(start):
-                return line.strip().replace(start, '')
-        else:
-            raise ValueError("didn't find the property")
-
-
 class CfyDirective(ObjectDescription):
     __metaclass__ = ABCMeta
 
@@ -169,7 +143,6 @@ class CfyDirective(ObjectDescription):
                         type=self.arguments[0],
                         name=name,
                         ))
-                    print(get_doc(self.arguments[0].strip(), name))
 
                     raise
                 else:
