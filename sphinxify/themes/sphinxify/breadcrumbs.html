@@ -1,0 +1,11 @@
+<ul class="wy-breadcrumbs">
+  <li><a href="{{ pathto(master_doc) }}">Docs</a> &raquo;</li>
+  <li><a href="">{{ title }}</a></li>
+  {% if meta is defined and meta is not none and 'github_url' in meta %}
+    <li class="wy-breadcrumbs-aside">
+        <a href="{{ meta['github_url'] }}" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  {% endif %}
+</ul>
+<hr/>
+

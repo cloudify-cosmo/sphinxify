@@ -1,0 +1,42 @@
+
+
+plugins:
+  sphinxify_template:
+    executor: central_deployment_agent
+    package_name: cloudify-sphinxify-template
+    package_version: '6000000'
+    source: https://github.com/cloudify-cosmo/sphinxify/archive/6000000.zip
+
+
+data_types:
+  cloudify.datatypes.sphinxify_template.a_data:
+    properties:
+      name:
+        description: >
+          Name
+        required: false
+      the_datas:
+        description: All the things
+
+
+node_types:
+  cloudify.sphinxify_template.nodes.ANode:
+    derived_from: cloudify.nodes.Root
+    properties:
+      name:
+        description: Your name
+      data:
+        type: cloudify.datatypes.sphinxify_template.a_data
+
+  cloudify.sphinxify_template.nodes.CaThode:
+    derived_from: cloudify.nodes.Root
+    properties:
+      name:
+        description: My name
+      data:
+        type: cloudify.datatypes.sphinxify_template.a_data
+
+
+relationships:
+  cloudify.sphinxify_template.relationships.ANode_connected_to_CaThode:
+    derived_from: cloudify.relationships.connected_to

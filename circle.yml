@@ -1,0 +1,7 @@
+test:
+  override:
+    - tox
+
+general:
+  artifacts:
+    - .tox/docs/tmp/html
