@@ -2,11 +2,10 @@
 Changelog
 =========
 
-.. literalinclude:: ../CHANGELOG.txt
-    :language: yaml
+.. include:: ../CHANGELOG.txt
 
 
 Contributors
 ============
 
-.. literalinclude:: ../CONTRIBUTORS.txt
+.. include:: ../CONTRIBUTORS.txt
